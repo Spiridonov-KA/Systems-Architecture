@@ -1,0 +1,7 @@
+.structurizr
+.vscode
+build
+db
+
+*:Zone.Identifier
+*.code-workspace
