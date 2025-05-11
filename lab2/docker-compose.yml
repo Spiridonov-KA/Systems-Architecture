@@ -1,0 +1,52 @@
+version: '3'
+services:
+  user_service:
+    tty: true
+    container_name: user_service
+    build:
+      dockerfile: user_service.Dockerfile
+    command: ["/bin/sh", "-c", "/app/user_service/start.sh"]
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_LOGIN=stud
+      - DB_PASSWORD=stud
+      - DB_DATABASE=archdb
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./user_service:/app/user_service
+      - ./database:/app/user_service/database
+      - ./config:/app/user_service/config
+      - ./server:/app/user_service/server
+      - ./init_table.py:/app/init_table.py
+    ports:
+      - 8080:8080
+    networks:
+      - network
+  db:
+    container_name: postgres
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=stud
+      - POSTGRES_PASSWORD=stud
+      - PGDATA=/data/postgres
+      - POSTGRES_DB=archdb
+    volumes:
+      - ./db:/data/postgres
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d postgres" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - network
+
+networks:
+  network:
+    driver: "bridge"
+    external: false
